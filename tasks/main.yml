@@ -1,0 +1,16 @@
+---
+- name: Install packages
+  apt:
+    name: squid
+    cache_valid_time: 3600
+    install_recommends: no
+
+- name: Configure service
+  template:
+    src: "{{ squid_deb_proxy | ternary('squid-deb-proxy.conf.j2','squid.conf.j2') }}"
+    dest: /etc/squid/squid.conf
+    owner: root
+    group: root
+    mode: 0644
+    validate: /usr/sbin/squid -f %s -k parse
+  notify: Restart Squid

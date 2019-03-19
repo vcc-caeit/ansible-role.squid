@@ -1,0 +1,110 @@
+{{ ansible_managed | comment }}
+
+#       WELCOME TO SQUID DEB PROXY
+#       ------------------
+#
+#       This config file is a version of a squid proxy file optimized
+#       as a configuration for a caching proxy for Debian/Ubuntu systems.
+#
+#       More information about squid and its configuration can be found here
+#       http://www.squid-cache.org/ and in the FAQ
+
+# settings that you may want to customize
+# ---------------------------------------
+
+# here we specify the networks allowed to connect to this proxy
+{% for network in squid_allowed_networks | default([]) %}
+acl allowed_networks src {{ network }}
+{% endfor %}
+
+# list of mirrors we want to allow connections to
+{% if squid_mirror_default %}
+# defaults to ubuntu and ubuntu country archive mirrors
+acl to_archive_mirrors dstdomain .archive.ubuntu.com
+acl to_archive_mirrors dstdomain ports.ubuntu.com
+acl to_archive_mirrors dstdomain security.ubuntu.com
+acl to_archive_mirrors dstdomain ddebs.ubuntu.com
+acl to_archive_mirrors dstdomain mirrors.ubuntu.com
+
+{% endif %}
+{% if squid_mirror_3rdparty %}
+# official third party repositories
+acl to_archive_mirrors dstdomain .archive.canonical.com
+acl to_archive_mirrors dstdomain .extras.ubuntu.com
+
+{% endif %}
+{% if squid_mirror_changelogs %}
+# default changelogs location, this includes changelogs and the meta-release
+# file that has information about new ubuntu versions
+acl to_archive_mirrors dstdomain changelogs.ubuntu.com
+
+{% endif %}
+{% if squid_mirror_ppas %}
+# launchpad personal package archives (disabled per default)
+acl to_archive_mirrors dstdomain ppa.launchpad.net
+acl to_archive_mirrors dstdomain private-ppa.launchpad.net
+
+{% endif %}
+# list any custom mirrors you want to access below
+{% for mirror in squid_mirror_custom | default([]) %}
+acl to_archive_mirrors dstdomain {{ mirror }}
+{% endfor %}
+
+# default to a different port than stock squid
+http_port {{ squid_http_port | default(3128) }}
+
+# -------------------------------------------------
+# settings below probably do not need customization
+
+# user visible name
+visible_hostname {{ squid_hostname }}
+
+# we need a big cache, some debs are huge
+maximum_object_size {{ squid_max_object_size | default("512 MB") }}
+
+# use a different dir than stock squid and default to 40G
+cache_dir {{ squid_cache_type | default('aufs') }} {{ squid_cache_path | default('/var/spool/squid') }} {{ squid_cache_size | default(40000) }} {{ squid_cache_options | default('16 256') }}
+
+# tweaks to speed things up
+cache_mem {{ squid_cache_mem | default("200 MB") }}
+maximum_object_size_in_memory {{ squid_max_object_mem_size | default("10240 KB") }}
+
+# refresh pattern for debs and udebs
+refresh_pattern deb$   129600 100% 129600
+refresh_pattern udeb$   129600 100% 129600
+refresh_pattern tar.gz$  129600 100% 129600
+refresh_pattern tar.xz$  129600 100% 129600
+refresh_pattern tar.bz2$  129600 100% 129600
+
+# always refresh Packages and Release files
+refresh_pattern \/(Packages|Sources)(|\.bz2|\.gz|\.xz)$ 0 0% 0 refresh-ims
+refresh_pattern \/Release(|\.gpg)$ 0 0% 0 refresh-ims
+refresh_pattern \/InRelease$ 0 0% 0 refresh-ims
+refresh_pattern \/(Translation-.*)(|\.bz2|\.gz|\.xz)$ 0 0% 0 refresh-ims
+
+# handle meta-release and changelogs.ubuntu.com special
+# (fine to have this on debian too)
+refresh_pattern changelogs.ubuntu.com\/.*  0  1% 1
+
+# only allow connects to ports for http, https
+acl Safe_ports port 80
+acl Safe_ports port 443 563   
+
+# only allow ports we trust
+http_access deny !Safe_ports
+
+# allow access only to official archive mirrors
+# uncomment the third and fourth line to permit any unlisted domain
+http_access deny !to_archive_mirrors
+#http_access allow !to_archive_mirrors
+
+# don't cache domains not listed in the mirrors file
+# uncomment the third and fourth line to cache any unlisted domains
+cache deny !to_archive_mirrors
+#cache allow !to_archive_mirrors
+
+# allow access from our network and localhost
+http_access allow allowed_networks
+
+# And finally deny all other access to this proxy
+http_access deny all

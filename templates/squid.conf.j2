@@ -1,0 +1,56 @@
+{{ ansible_managed | comment }}
+
+# List of allowed client networks
+{% for network in squid_allowed_networks %}
+acl allowed_networks src {{ network }}
+{% endfor %}
+
+acl SSL_ports port 443
+acl Safe_ports port 80		# http
+acl Safe_ports port 21		# ftp
+acl Safe_ports port 443		# https
+acl Safe_ports port 70		# gopher
+acl Safe_ports port 210		# wais
+acl Safe_ports port 1025-65535	# unregistered ports
+acl Safe_ports port 280		# http-mgmt
+acl Safe_ports port 488		# gss-http
+acl Safe_ports port 591		# filemaker
+acl Safe_ports port 777		# multiling http
+acl CONNECT method CONNECT
+
+# Deny requests to certain unsafe ports
+http_access deny !Safe_ports
+
+# Deny CONNECT to other than secure SSL ports
+http_access deny CONNECT !SSL_ports
+
+# Only allow cachemgr access from localhost
+http_access allow localhost manager
+http_access deny manager
+
+# Here are the rules for what clients we allow out
+http_access deny to_localhost
+http_access allow allowed_networks
+
+# And finally deny all other access to this proxy
+http_access deny all
+
+# Templated options, some with defaults
+http_port {{ squid_http_port | default(3128) }}
+visible_hostname {{ squid_hostname }}
+{% if squid_max_object_size is defined %}
+
+# How large objects should we cache?
+maximum_object_size {{ squid_max_object_size }}
+{% endif %}
+{% if squid_cache_type is defined or squid_cache_path is defined or squid_cache_size is defined or squid_cache_options is defined %}
+
+# Defaults to no disk cache. Store cache objects only in memory.
+cache_dir {{ squid_cache_type | default('ufs') }} {{ squid_cache_path | default('/var/spool/squid') }} {{ squid_cache_size | default(100) }} {{ squid_cache_options | default('16 256') }}
+{% endif %}
+{% if squid_cache_mem is defined or squid_max_object_mem_size is defined %}
+
+# Tweaks to speed things up
+cache_mem {{ squid_cache_mem | default("200 MB") }}
+maximum_object_size_in_memory {{ squid_max_object_mem_size | default("10240 KB") }}
+{% endif %}
