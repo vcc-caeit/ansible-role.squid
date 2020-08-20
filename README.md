@@ -29,6 +29,11 @@ Set this to true if you want a proxy optimised for handling Ubuntu mirrors rathe
 
     squid_deb_proxy: false
 
+For making Avahi broadcast your deb proxy on the network, set this to true. With `squid-deb-proxy-client` installed on the clients
+your proxy will then be automatically used if available on the same multicast domain.
+
+    squid_deb_proxy_avahi: false
+
 These are default values for the `squid_deb_proxy` parts and doesn't apply when the variable `squid_deb_proxy` is set to false.
 `squid_mirror_custom` should be a list. Remember to remove `[]` if you want to add to it.
 

@@ -1,0 +1,13 @@
+<?xml version="1.0" standalone='no'?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<service-group>
+        <name replace-wildcards="yes">Caching APT mirror on %h</name>
+        <service protocol="ipv6">
+                <type>_apt_proxy._tcp</type>
+                <port>{{ squid_http_port | default(3128) }}</port>
+        </service>
+        <service protocol="ipv4">
+                <type>_apt_proxy._tcp</type>
+                <port>{{ squid_http_port | default(3128) }}</port>
+        </service>
+</service-group>

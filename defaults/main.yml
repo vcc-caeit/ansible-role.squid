@@ -9,6 +9,7 @@ squid_allowed_networks:
   - ::1
 
 squid_deb_proxy: false
+squid_deb_proxy_avahi: false
 squid_mirror_default: true
 squid_mirror_3rdparty: true
 squid_mirror_changelogs: true
