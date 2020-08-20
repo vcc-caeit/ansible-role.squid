@@ -1,5 +1,5 @@
 Ansible Role: squid
-=========
+===================
 
 This role aims to configure Squid on Ubuntu 16.04 LTS, and hopefully later LTS releases.
 
@@ -74,7 +74,7 @@ Example Playbook
           - .ftp.acc.umu.se
         squid_cache_size: 8000
       roles:
-        - vcc-caeit.squid
+        - vcc_caeit.squid
 
 License
 -------
