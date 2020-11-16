@@ -108,3 +108,11 @@ http_access allow allowed_networks
 
 # And finally deny all other access to this proxy
 http_access deny all
+
+# we don't want to clash with the squid netdb state file
+#netdb_filename stdio:/var/log/squid-deb-proxy/netdb.state
+{% if squid_nameservers is defined %}
+
+# Set nameservers for squid to use
+dns_nameservers {{ squid_nameservers if squid_nameservers is string else squid_nameservers | join(' ') }}
+{% endif %}
