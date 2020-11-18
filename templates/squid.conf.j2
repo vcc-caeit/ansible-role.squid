@@ -54,3 +54,8 @@ cache_dir {{ squid_cache_type | default('ufs') }} {{ squid_cache_path | default(
 cache_mem {{ squid_cache_mem | default("200 MB") }}
 maximum_object_size_in_memory {{ squid_max_object_mem_size | default("10240 KB") }}
 {% endif %}
+{% if squid_nameservers is defined %}
+
+# Set nameservers for squid to use
+dns_nameservers {{ squid_nameservers if squid_nameservers is string else squid_nameservers | join(' ') }}
+{% endif %}

@@ -38,7 +38,6 @@ These are default values for the `squid_deb_proxy` parts and doesn't apply when 
     squid_mirror_ppas: false
     squid_mirror_custom: []
 
-
 Except for these defined variables, there are some with default values in the templates that you can customise.
 We list them here with their default values in common variable stanza:
 
@@ -62,6 +61,11 @@ How much memory we want to use, and how large objects we will store there.
 
     squid_cache_mem: "200 MB"
     squid_max_object_mem_size: "10240 KB"
+
+In case you need Squid to use different nameservers than the system you can define `squid_nameservers` as either a string
+for a single one or a list for more than one.
+
+    squid_nameservers: None
 
 
 Example Playbook
