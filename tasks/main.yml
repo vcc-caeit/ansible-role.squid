@@ -1,7 +1,9 @@
 ---
 - name: Install packages
   apt:
-    name: squid
+    name:
+      - squid
+      - "{% if squid_deb_proxy_avahi %}avahi-daemon{% endif %}"
     cache_valid_time: 3600
     install_recommends: no
 
@@ -14,3 +16,13 @@
     mode: 0644
     validate: /usr/sbin/squid -f %s -k parse
   notify: Restart Squid
+
+- name: Configure mDNS service
+  template:
+    src: squid-deb-proxy.avahi.j2
+    dest: /etc/avahi/services/squid.service
+    owner: root
+    group: root
+    mode: 0644
+  notify: Reload Avahi
+  when: squid_deb_proxy_avahi | bool

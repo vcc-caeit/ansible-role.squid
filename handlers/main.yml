@@ -3,3 +3,8 @@
   service:
     name: squid
     state: restarted
+
+- name: Reload Avahi
+  service:
+    name: avahi-daemon
+    state: reloaded
