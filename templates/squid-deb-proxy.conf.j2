@@ -18,7 +18,20 @@ acl allowed_networks src {{ network }}
 {% endfor %}
 
 # list of mirrors we want to allow connections to
-{% if squid_mirror_default %}
+{% if squid_mirror_debian and squid_mirror_default %}
+# the default mirror names on debian are ftp[0-9]*\.[a-z]+\.debian\.org
+# but that would require (slow) regexp matching, so for now we allow
+# www.debian.org and friends here too
+acl to_archive_mirrors dstdomain .debian.org
+acl to_archive_mirrors dstdomain cdn.debian.net
+acl to_archive_mirrors dstdomain http.debian.net
+
+# default mirrors
+#acl to_archive_mirrors dstdomain ftp.debian.org
+#acl to_archive_mirrors dstdomain security.debian.org
+
+{% endif %}
+{% if squid_mirror_ubuntu and squid_mirror_default %}
 # defaults to ubuntu and ubuntu country archive mirrors
 acl to_archive_mirrors dstdomain .archive.ubuntu.com
 acl to_archive_mirrors dstdomain ports.ubuntu.com
@@ -27,13 +40,13 @@ acl to_archive_mirrors dstdomain ddebs.ubuntu.com
 acl to_archive_mirrors dstdomain mirrors.ubuntu.com
 
 {% endif %}
-{% if squid_mirror_3rdparty %}
+{% if squid_mirror_ubuntu and squid_mirror_3rdparty %}
 # official third party repositories
 acl to_archive_mirrors dstdomain .archive.canonical.com
 acl to_archive_mirrors dstdomain .extras.ubuntu.com
 
 {% endif %}
-{% if squid_mirror_changelogs %}
+{% if squid_mirror_ubuntu and squid_mirror_changelogs %}
 # default changelogs location, this includes changelogs and the meta-release
 # file that has information about new ubuntu versions
 acl to_archive_mirrors dstdomain changelogs.ubuntu.com
