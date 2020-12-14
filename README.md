@@ -71,6 +71,15 @@ If you don't want to specify the `squid_cache_peers`, we include some shortcuts 
       - sibling.example.org
       - sibling.example.net:3129
 
+Since different environments are different, we included `squid_direct_connections` to handle when we connect directly to the origin servers.
+We always check for cache hits on our cache peers before we decide how to fulfil the request, which is when this option gets interesting.
+`always` will always use a direct connection and fail when then doesn't work. `never` will always use a parent proxy for the request and fail
+if that does not work. `prefer` will prefer to connect to the origin server, but fallback to the parent proxies in case of failure. `fallback`
+will always try the parent proxies first, but use direct connections as fallback would that fail.
+By default this is not set, which will use whatever default your Squid installation uses.
+
+    squid_direct_connections: always never prefer fallback
+
 What port should we listen on. If we are a cache sibling, we will use the defined port instead of the `squid_http_port` variable.
 
     squid_http_port: 3128
@@ -93,9 +102,9 @@ How much memory we want to use, and how large objects we will store there.
     squid_max_object_mem_size: "10240 KB"
 
 In case you need Squid to use different nameservers than the system you can define `squid_nameservers` as either a string
-for a single one or a list for more than one.
+for a single one or a list for more than one. By default this option is unset, and we use the system nameserver(s).
 
-    squid_nameservers: None
+    squid_nameservers: 127.0.0.53
 
 
 Example Playbook
