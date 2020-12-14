@@ -26,3 +26,5 @@ squid_mirror_changelogs: true
 squid_mirror_ppas: false
 
 squid_mirror_custom: []
+
+squid_mirror_match_all_repositories: false

@@ -43,6 +43,12 @@ These are default values for the `squid_deb_proxy` parts and doesn't apply when 
     squid_mirror_ppas: false
     squid_mirror_custom: []
 
+If you are not sure which repositories your users will use, you can set `squid_mirror_match_all_repositories` to true.
+This will try and regex match the path of the URL to valid repository formats.
+Since regex is slow we add this as a last hit and default to not include this.
+
+    squid_mirror_match_all_repositories: false
+
 Except for these defined variables, there are some with default values in the templates that you can customise.
 We list them here with their default values in common variable stanza:
 
