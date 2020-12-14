@@ -96,8 +96,8 @@ prefer_direct off
 nonhierarchical_direct off
 {%     endif %}
 {%   endif %}
-
 {%   if cache_server is defined %}
+
 # set up cache server and let specified peers do queries
 {%     if cache_server.query_type | default(None) == 'icp' %}
 icp_port {{ cache_server.query_port | default(3130) }}
