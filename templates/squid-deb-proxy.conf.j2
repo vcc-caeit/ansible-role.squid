@@ -49,6 +49,12 @@ acl to_archive_mirrors dstdomain private-ppa.launchpad.net
 {% for mirror in squid_mirror_custom | default([]) %}
 acl to_archive_mirrors dstdomain {{ mirror }}
 {% endfor %}
+{% if squid_mirror_match_all_repositories %}
+
+# allow connections only to the following regex paths, matching how APT mirrors look
+acl to_archive_mirrors urlpath_regex \/dists\/\w+(-\w+)*\/.*$
+acl to_archive_mirrors urlpath_regex \/pool\/\w+\/(lib)?[a-z]\/.*\.(deb|udeb|tar\.(gz|xz|bz2))$
+{% endif %}
 
 # set the port we should listen to for queries, default to stock squid
 http_port {{ squid_http_port | default(3128) }}
