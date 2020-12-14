@@ -10,30 +10,30 @@ acl allowed_networks src {{ network }}
 {%   if not parent_proxy.startswith('http') %}
 {%     set parent_proxy = 'http://' + parent_proxy %}
 {%   endif %}
-{%   set cache_peers = cache_peers.append(
-       {
-        'host': parent_proxy | urlsplit('hostname'),
-        'type': 'parent',
-        'port': parent_proxy | urlsplit('port'),
-        'options': ['default']
-       }
-     ) %}
-{% endfor %}
+{{ cache_peers.append(
+   {
+    'host': parent_proxy | urlsplit('hostname'),
+    'type': 'parent',
+    'port': parent_proxy | urlsplit('port'),
+    'options': ['default']
+   }
+) }}
+{%- endfor %}
 {% set cache_peers = cache_peers | union(squid_cache_peers | default([])) %}
 {% for sibling_proxy in [squid_sibling_proxies | default(None)] | flatten %}
 {%   if not sibling_proxy.startswith('http') %}
 {%     set sibling_proxy = 'http://' + sibling_proxy %}
 {%   endif %}
-{%   set cache_peers = cache_peers.append(
-       {
-        'host': sibling_proxy | urlsplit('hostname'),
-        'type': 'sibling',
-        'port': sibling_proxy | urlsplit('port'),
-        'query_type': 'htcp',
-        'options': ['proxy-only']
-       }
-     ) %}
-{% endfor %}
+{{ cache_peers.append(
+   {
+    'host': sibling_proxy | urlsplit('hostname'),
+    'type': 'sibling',
+    'port': sibling_proxy | urlsplit('port'),
+    'query_type': 'htcp',
+    'options': ['proxy-only']
+   }
+) }}
+{%- endfor %}
 {% if cache_peers | length != 0 %}
 {%   if cache_peers | selectattr('host', 'eq', ansible_fqdn) | length == 1 %}
 {%     set cache_server = cache_peers | selectattr('host', 'eq', ansible_fqdn) | first %}
@@ -41,16 +41,18 @@ acl allowed_networks src {{ network }}
 {%   endif %}
 {%   set cache_peers = cache_peers | rejectattr('host', 'eq', ansible_fqdn) | unique %}
 {%   set cache_types = namespace(children=False, siblings=False) %}
+{%   if cache_server is defined %}
 # create ACLs for our cache peers to query us
-{%   for sibling in cache_peers | selectattr('type', 'eq', 'sibling') | map(attribute='host') | unique %}
-{%     set cache_types.siblings=True %}
+{%     for sibling in cache_peers | selectattr('type', 'eq', 'sibling') | map(attribute='host') | unique %}
+{%       set cache_types.siblings=True %}
 acl siblings src {{ sibling }}
-{%   endfor %}
-{%   for child in cache_peers | selectattr('type', 'eq', 'child') | map(attribute='host') | unique %}
-{%     set cache_types.children=True %}
+{%     endfor %}
+{%     for child in cache_peers | selectattr('type', 'eq', 'child') | map(attribute='host') | unique %}
+{%       set cache_types.children=True %}
 acl children src {{ child }}
-{%   endfor %}
+{%     endfor %}
 
+{%   endif %}
 # cache hierarchy
 {%   set cache_clients = namespace(icp=False, htcp=False) %}
 {%   for cache_peer in cache_peers | rejectattr('type', 'eq', 'child') | unique %}
@@ -68,51 +70,58 @@ acl children src {{ child }}
 {%       if query_type == 'htcp' %}
 {%         set cache_clients.htcp = True %}
 {%         if query_port == 0 %}{% set query_port = 4827 %}{% endif %}
-{%         if 'htcp' not in options %}{% set options = options + ['htcp'] %}{% endif %}
+{%         if 'htcp' not in options %}{{ options.append('htcp') }}{% endif %}
 {%       endif %}
 {%     endif %}
 cache_peer {{ host }} {{ type }} {{ port }} {{ query_port }} {{ options | join(' ') }}
 {%   endfor %}
-{%   if squid_direct_connections == 'always' %}
+{%   if squid_direct_connections is defined %}
+{%     if squid_direct_connections == 'always' %}
 
 # always use direct connection if we don't get a cache hit
 always_direct allow all
-{%   elif squid_direct_connections == 'never' %}
+{%     elif squid_direct_connections == 'never' %}
 
 # never attempt direct connections, i.e. no direct access to Internet
 never_direct allow all
-{%   elif squid_direct_connections == 'prefer' %}
+{%     elif squid_direct_connections == 'prefer' %}
 
 # prefer using direct connections if we don't get a cache hit, fallback to parent proxies
 prefer_direct on
 nonhierarchical_direct off
-{%   elif squid_direct_connections == 'fallback' %}
+{%     elif squid_direct_connections == 'fallback' %}
 
 # prefer using parent proxies if we don't get a cache hit, fallback to direct connections
 prefer_direct off
 nonhierarchical_direct off
+{%     endif %}
 {%   endif %}
 
+{%   if cache_server is defined %}
 # set up cache server and let specified peers do queries
-{%   if cache_server.query_type | default(None) == 'icp' or cache_clients.icp %}
+{%     if cache_server.query_type | default(None) == 'icp' %}
+icp_port {{ cache_server.query_port | default(3130) }}
+{%       if cache_server.query_type | default(None) == 'icp' and cache_types.siblings %}
+icp_access allow siblings
+{%       endif %}
+{%       if cache_server.query_type | default(None) == 'icp' and cache_types.children %}
+icp_access allow children
+{%       endif %}
+icp_access deny all
+{%     elif cache_server.query_type | default(None) == 'htcp' %}
+htcp_port {{ cache_server.query_port | default(4827) }}
+{%       if cache_types.siblings %}
+htcp_access allow siblings
+{%       endif %}
+{%       if cache_types.children %}
+htcp_access allow children
+{%       endif %}
+htcp_access deny all
+{%     endif %}
+{%   elif cache_clients.icp %}
 # note that we need to open the icp_port even in client mode
 icp_port {{ cache_server.query_port | default(3130) }}
-{%     if cache_server.query_type | default(None) == 'icp' and cache_types.siblings %}
-icp_access allow siblings
-{%     endif %}
-{%     if cache_server.query_type | default(None) == 'icp' and cache_types.children %}
-icp_access allow children
-{%     endif %}
 icp_access deny all
-{%   elif cache_server.query_type | default(None) == 'htcp' %}
-htcp_port {{ cache_server.query_port | default(4827) }}
-{%     if cache_types.siblings %}
-htcp_access allow siblings
-{%     endif %}
-{%     if cache_types.children %}
-htcp_access allow children
-{%     endif %}
-htcp_access deny all
 {%   endif %}
 
 {% endif %}
