@@ -50,6 +50,103 @@ acl to_archive_mirrors dstdomain private-ppa.launchpad.net
 acl to_archive_mirrors dstdomain {{ mirror }}
 {% endfor %}
 
+{% set cache_peers = [] %}
+{% for parent_proxy in [squid_parent_proxies | default(None)] | flatten %}
+{%   if not parent_proxy.startswith('http') %}
+{%     set parent_proxy = 'http://' + parent_proxy %}
+{%   endif %}
+{%   set cache_peers = cache_peers.append(
+       {
+        'host': parent_proxy | urlsplit('hostname'),
+        'type': 'parent',
+        'port': parent_proxy | urlsplit('port'),
+        'options': ['default', 'no-query']
+       }
+     ) %}
+{% endfor %}
+{% set cache_peers = cache_peers | union(squid_cache_peers | default([])) %}
+{% for sibling_proxy in [squid_sibling_proxies | default(None)] | flatten %}
+{%   if not sibling_proxy.startswith('http') %}
+{%     set sibling_proxy = 'http://' + sibling_proxy %}
+{%   endif %}
+{%   set cache_peers = cache_peers.append(
+       {
+        'host': sibling_proxy | urlsplit('hostname'),
+        'type': 'sibling',
+        'port': sibling_proxy | urlsplit('port'),
+        'query_type': 'icp',
+        'options': ['proxy-only']
+       }
+     ) %}
+{% endfor %}
+{% if cache_peers | length != 0 %}
+{%   if cache_peers | selectattr('host', 'eq', ansible_fqdn) | length == 1 %}
+{%     set cache_server = cache_peers | selectattr('host', 'eq', ansible_fqdn) | first %}
+{%     set squid_http_port = cache_server.port %}
+{%   endif %}
+{%   set cache_peers = cache_peers | rejectattr('host', 'eq', ansible_fqdn) | unique %}
+# create ACL siblings with all the siblings except for ourselves
+{%   for sibling in cache_peers | selectattr('type', 'eq', 'sibling') | map(attribute='host') | unique %}
+acl siblings src {{ sibling }}
+{%   endfor %}
+
+# cache hierarchy
+{%   set cache_clients = namespace(icp=False, htcp=False) %}
+{%   for cache_peer in cache_peers %}
+{%     set host = cache_peer.host %}
+{%     set type = cache_peer.type %}
+{%     set port = cache_peer.port | default(3128, True) %}
+{%     set query_type = cache_peer.query_type | default(None) %}
+{%     set query_port = cache_peer.query_port | default(0) %}
+{%     set options = [cache_peer.options | default(None)] | flatten %}
+{%     if query_type != None %}
+{%       if query_type == 'icp' %}
+{%         set cache_clients.icp = True %}
+{%         if query_port == 0 %}{% set query_port = 3130 %}{% endif %}
+{%       endif %}
+{%       if query_type == 'htcp' %}
+{%         set cache_clients.htcp = True %}
+{%         if query_port == 0 %}{% set query_port = 4827 %}{% endif %}
+{%         if 'htcp' not in options %}{% set options = options + ['htcp'] %}{% endif %}
+{%       endif %}
+{%     endif %}
+cache_peer {{ host }} {{ type }} {{ port }} {{ query_port }} {{ options | join(' ') }}
+{%   endfor %}
+{%   if squid_direct_connections == 'always' %}
+
+# always use direct connection if we don't get a cache hit
+always_direct allow all
+{%   elif squid_direct_connections == 'never' %}
+
+# never attempt direct connections, i.e. no direct access to Internet
+never_direct allow all
+{%   elif squid_direct_connections == 'prefer' %}
+
+# prefer using direct connections if we don't get a cache hit, fallback to parent proxies
+prefer_direct on
+nonhierarchical_direct off
+{%   elif squid_direct_connections == 'fallback' %}
+
+# prefer using parent proxies if we don't get a cache hit, fallback to direct connections
+prefer_direct off
+nonhierarchical_direct off
+{%   endif %}
+
+# set up cache server and enable siblings to query us
+{%   if cache_server.query_type | default(None) == 'icp' or cache_clients.icp %}
+# note that we need to open the icp_port even in client mode
+icp_port {{ cache_server.query_port | default(3130) }}
+{%     if cache_server.query_type | default(None) == 'icp' %}
+icp_access allow siblings
+{%     endif %}
+icp_access deny all
+{%   elif cache_server.query_type | default(None) == 'htcp' %}
+htcp_port {{ cache_server.query_port | default(4827) }}
+htcp_access allow siblings
+htcp_access deny all
+{%   endif %}
+
+{% endif %}
 # set the port we should listen to for queries, default to stock squid
 http_port {{ squid_http_port | default(3128) }}
 
