@@ -1,15 +1,19 @@
 galaxy_info:
   author: Nafallo Bjälevik
   role_name: squid
-  description: Squid for Ubuntu, with squid-deb-proxy optional
+  description: Squid for Ubuntu, with squid-deb-proxy support
   company: Volvo Cars Corporation
   license: GPLv2
   min_ansible_version: 2.3
   platforms:
+    - name: Debian
+      versions:
+        - buster
     - name: Ubuntu
       versions:
-      - xenial
-      - bionic
+        - xenial
+        - bionic
+        - focal
   galaxy_tags:
     - proxy
     - squid
