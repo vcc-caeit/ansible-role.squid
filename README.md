@@ -35,8 +35,11 @@ your proxy will then be automatically used if available on the same multicast do
     squid_deb_proxy_avahi: false
 
 These are default values for the `squid_deb_proxy` parts and doesn't apply when the variable `squid_deb_proxy` is set to false.
-`squid_mirror_custom` should be a list. Remember to remove `[]` if you want to add to it.
+`squid_mirror_debian` and `squid_mirror_ubuntu` defaults to true or false depending on the host you're setting up Squid on, with
+the other options except for `squid_mirror_custom` depending on these settings. `squid_mirror_custom` should be a list.
 
+    squid_mirror_debian: true on Debian servers, false otherwise
+    squid_mirror_ubuntu: true on Ubuntu servers, false otherwise
     squid_mirror_default: true
     squid_mirror_3rdparty: true
     squid_mirror_changelogs: true

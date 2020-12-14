@@ -17,6 +17,10 @@ squid_deb_proxy: false
 
 squid_deb_proxy_avahi: false
 
+squid_mirror_debian: "{{ True if ansible_distribution == 'Debian' else False }}"
+
+squid_mirror_ubuntu: "{{ True if ansible_distribution == 'Ubuntu' else False }}"
+
 squid_mirror_default: true
 
 squid_mirror_3rdparty: true
