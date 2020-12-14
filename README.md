@@ -46,7 +46,32 @@ These are default values for the `squid_deb_proxy` parts and doesn't apply when 
 Except for these defined variables, there are some with default values in the templates that you can customise.
 We list them here with their default values in common variable stanza:
 
-What port should we listen on.
+There is support for cache peers by using a list of dicts. By default this variable is unset. We include a set of examples with all the options here.
+To find out values for these options, you should visit the Squid documentation. `query_port` will be set to the default based on `query_type` if not set.
+
+    squid_cache_peers:
+      - host: parent.example.org
+        type: parent
+        port: 8080
+        query_type: htcp
+        query_port: 54213
+        options:
+          - default
+          - htcp
+      - host: sibling.example.org
+        type: sibling
+        port: 3128
+        query_type: icp
+        options: no-proxy
+
+If you don't want to specify the `squid_cache_peers`, we include some shortcuts which apply reasonable defaults for the other values above.
+
+    squid_parent_proxies: http://parent.example.org:8080
+    squid_sibling_proxies:
+      - sibling.example.org
+      - sibling.example.net:3129
+
+What port should we listen on. If we are a cache sibling, we will use the defined port instead of the `squid_http_port` variable.
 
     squid_http_port: 3128
 
