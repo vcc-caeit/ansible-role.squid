@@ -13,7 +13,7 @@
 # ---------------------------------------
 
 # here we specify the networks allowed to connect to this proxy
-{% for network in squid_allowed_networks | default([]) %}
+{% for network in squid_allowed_networks %}
 acl allowed_networks src {{ network }}
 {% endfor %}
 
@@ -50,7 +50,7 @@ acl to_archive_mirrors dstdomain private-ppa.launchpad.net
 acl to_archive_mirrors dstdomain {{ mirror }}
 {% endfor %}
 
-# default to a different port than stock squid
+# set the port we should listen to for queries, default to stock squid
 http_port {{ squid_http_port | default(3128) }}
 
 # -------------------------------------------------
@@ -88,7 +88,7 @@ refresh_pattern changelogs.ubuntu.com\/.*  0  1% 1
 
 # only allow connects to ports for http, https
 acl Safe_ports port 80
-acl Safe_ports port 443 563   
+acl Safe_ports port 443 563
 
 # only allow ports we trust
 http_access deny !Safe_ports

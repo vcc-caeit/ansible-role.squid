@@ -1,17 +1,28 @@
 ---
 squid_hostname: "{{ ansible_hostname }}"
+
 squid_allowed_networks:
+  # private networks
   - 10.0.0.0/8
   - 172.16.0.0/12
   - 192.168.0.0/16
   - 127.0.0.1
+  # IPv6 private addresses
   - fe80::/64
   - ::1
+  # IPv6 mesh local
+  - fd00::/64
 
 squid_deb_proxy: false
+
 squid_deb_proxy_avahi: false
+
 squid_mirror_default: true
+
 squid_mirror_3rdparty: true
+
 squid_mirror_changelogs: true
+
 squid_mirror_ppas: false
+
 squid_mirror_custom: []
