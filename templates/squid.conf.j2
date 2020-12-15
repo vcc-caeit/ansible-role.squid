@@ -156,7 +156,7 @@ http_access allow allowed_networks
 http_access deny all
 
 # Templated options, some with defaults
-http_port {{ squid_http_port | default(3128) }}
+http_port {{ squid_http_port | default(3128, True) }}
 visible_hostname {{ squid_hostname }}
 {% if squid_max_object_size is defined %}
 

@@ -183,6 +183,7 @@ htcp_access allow children
 htcp_access deny all
 {%     endif %}
 {%   elif cache_clients.icp %}
+
 # note that we need to open the icp_port even in client mode
 icp_port {{ cache_server.query_port | default(3130) }}
 icp_access deny all
@@ -190,7 +191,7 @@ icp_access deny all
 
 {% endif %}
 # set the port we should listen to for queries, default to stock squid
-http_port {{ squid_http_port | default(3128) }}
+http_port {{ squid_http_port | default(3128, True) }}
 
 # -------------------------------------------------
 # settings below probably do not need customization
@@ -235,19 +236,23 @@ http_access deny !Safe_ports
 # allow access only to official archive mirrors
 # uncomment the third and fourth line to permit any unlisted domain
 http_access deny !to_archive_mirrors
-{% if squid_mirror_match_all_repositories %}
-http_access deny !to_match_mirrors
-{% endif %}
 #http_access allow !to_archive_mirrors
 
+{% if squid_mirror_match_all_repositories %}
+# allow access to urls matching the repository structure
+http_access deny !to_match_mirrors
+
+{% endif %}
 # don't cache domains not listed in the mirrors file
 # uncomment the third and fourth line to cache any unlisted domains
 cache deny !to_archive_mirrors
-{% if squid_mirror_match_all_repositories %}
-cache deny !to_match_mirrors
-{% endif %}
 #cache allow !to_archive_mirrors
 
+{% if squid_mirror_match_all_repositories %}
+# don't cache domains not matching repository structure
+cache deny !to_match_mirrors
+
+{% endif %}
 # allow access from our network and localhost
 http_access allow allowed_networks
 
