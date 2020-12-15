@@ -65,8 +65,8 @@ acl to_archive_mirrors dstdomain {{ mirror }}
 {% if squid_mirror_match_all_repositories %}
 
 # allow connections only to the following regex paths, matching how APT mirrors look
-acl to_archive_mirrors urlpath_regex \/dists\/\w+(-\w+)*\/.*$
-acl to_archive_mirrors urlpath_regex \/pool\/\w+\/(lib)?[a-z]\/.*\.(deb|udeb|tar\.(gz|xz|bz2))$
+acl to_match_mirrors urlpath_regex \/dists\/\w+(-\w+)*\/.*$
+acl to_match_mirrors urlpath_regex \/pool\/\w+\/(lib)?[a-z]\/.*\.(deb|udeb|tar\.(gz|xz|bz2))$
 {% endif %}
 
 {% set cache_peers = [] %}
@@ -235,11 +235,17 @@ http_access deny !Safe_ports
 # allow access only to official archive mirrors
 # uncomment the third and fourth line to permit any unlisted domain
 http_access deny !to_archive_mirrors
+{% if squid_mirror_match_all_repositories %}
+http_access deny !to_match_mirrors
+{% endif %}
 #http_access allow !to_archive_mirrors
 
 # don't cache domains not listed in the mirrors file
 # uncomment the third and fourth line to cache any unlisted domains
 cache deny !to_archive_mirrors
+{% if squid_mirror_match_all_repositories %}
+cache deny !to_match_mirrors
+{% endif %}
 #cache allow !to_archive_mirrors
 
 # allow access from our network and localhost
