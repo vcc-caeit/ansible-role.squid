@@ -1,9 +1,7 @@
 ---
 - name: Install packages
   apt:
-    name:
-      - squid
-      - "{% if squid_deb_proxy_avahi %}avahi-daemon{% endif %}"
+    name: ["{% if squid_deb_proxy_avahi %}avahi-daemon,{% endif %}squid"]
     cache_valid_time: 3600
     install_recommends: no
 
