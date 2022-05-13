@@ -118,6 +118,9 @@ htcp_access allow children
 {%       endif %}
 htcp_access deny all
 {%     endif %}
+
+acl internal-url urlpath_regex ^/squid-internal-.*
+http_access allow to_localhost internal-url
 {%   elif cache_clients.icp %}
 # note that we need to open the icp_port even in client mode
 icp_port {{ cache_server.query_port | default(3130) }}
