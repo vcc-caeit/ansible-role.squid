@@ -10,9 +10,9 @@ Role Variables
 
 Available variables are listed below, along with default values (see `defaults/main.yml`):
 
-We set `visible_hostname` to whatever `ansible_fqdn` is set to.
+We set `visible_hostname` to whatever `ansible_host` is set to.
 
-    squid_hostname: "{{ ansible_fqdn }}"
+    squid_hostname: "{{ ansible_host }}"
 
 In `squid_allowed_networks` we define a list of networks allowed to connect.
 We default to IPv4 RFC1918, IPv6 link-local and localhost for both families.

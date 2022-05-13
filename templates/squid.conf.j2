@@ -35,10 +35,10 @@ acl allowed_networks src {{ network }}
 ) }}
 {%- endfor %}
 {% if cache_peers | length != 0 %}
-{%   if cache_peers | selectattr('host', 'eq', ansible_fqdn) | length == 1 %}
-{%     set cache_server = cache_peers | selectattr('host', 'eq', ansible_fqdn) | first %}
+{%   if cache_peers | selectattr('host', 'eq', ansible_host) | length == 1 %}
+{%     set cache_server = cache_peers | selectattr('host', 'eq', ansible_host) | first %}
 {%   endif %}
-{%   set cache_peers = cache_peers | rejectattr('host', 'eq', ansible_fqdn) | unique %}
+{%   set cache_peers = cache_peers | rejectattr('host', 'eq', ansible_host) | unique %}
 {%   set cache_types = namespace(children=False, siblings=False) %}
 {%   if cache_server is defined %}
 # create ACLs for our cache peers to query us
