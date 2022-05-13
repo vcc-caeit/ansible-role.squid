@@ -1,9 +1,16 @@
 ---
-- name: Install packages
+- name: Ensure squid installed
   apt:
-    name: ["{{ 'avahi-daemon' if squid_deb_proxy_avahi else None }}", 'squid']
+    name: squid
     cache_valid_time: 3600
-    install_recommends: no
+    install_recommends: false
+
+- name: Ensure avahi-daemon installed
+  apt:
+    name: avahi-daemon
+    cache_valid_time: 3600
+    install_recommends: false
+  when: squid_deb_proxy_avahi | bool
 
 - name: Configure service
   template:
