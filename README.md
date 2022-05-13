@@ -10,9 +10,9 @@ Role Variables
 
 Available variables are listed below, along with default values (see `defaults/main.yml`):
 
-We set `visible_hostname` to whatever `ansible_hostname` is set to.
+We set `visible_hostname` to whatever `ansible_fqdn` is set to.
 
-    squid_hostname: "{{ ansible_hostname }}"
+    squid_hostname: "{{ ansible_fqdn }}"
 
 In `squid_allowed_networks` we define a list of networks allowed to connect.
 We default to IPv4 RFC1918, IPv6 link-local and localhost for both families.
@@ -93,7 +93,8 @@ By default this is not set, which will use whatever default your Squid installat
 
     squid_direct_connections: always never prefer fallback
 
-What port should we listen on. If we are a cache sibling, we will use the defined port instead of the `squid_http_port` variable.
+What port should we listen on. If we are a cache sibling, we will use the defined port instead of the `squid_http_port` variable for `squid_deb_proxy`.
+When `squid_deb_proxy` is not set, there is now support for having this variable be a list of Listen directives.
 
     squid_http_port: 3128
 
