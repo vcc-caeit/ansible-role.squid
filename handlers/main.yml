@@ -1,5 +1,6 @@
 ---
 - name: Restart Squid
+  throttle: 1
   service:
     name: squid
     state: restarted
