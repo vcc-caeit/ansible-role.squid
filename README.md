@@ -52,6 +52,10 @@ Since regex is slow we add this as a last hit and default to not include this.
 
     squid_mirror_match_all_repositories: false
 
+When OpenDNS/Cisco Umbrella automatic redirection is in use on your network, you will likely need the cache server to support the redirects.
+
+    squid_mirror_opendns: false
+
 Except for these defined variables, there are some with default values in the templates that you can customise.
 We list them here with their default values in common variable stanza:
 

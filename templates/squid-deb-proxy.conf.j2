@@ -71,6 +71,11 @@ acl to_matching_mirrors urlpath_regex \/pool\/\w+\/(lib)?[a-z0-9]\/.+\.(deb|udeb
 acl to_matching_mirrors urlpath_regex \/meta-release.*$
 {%   endif %}
 {% endif %}
+{% if squid_mirror_opendns %}
+
+# allow connections match opendns rewrite requests
+acl opendns_rewrite url_regex ^.+\.x\.\w{36}\.\w{8}\.id\.opendns\.com\/.*\?.*$
+{% endif %}
 
 {% set cache_peers = [] %}
 {% for parent_proxy in [squid_parent_proxies | default(None)] | flatten %}
@@ -257,6 +262,11 @@ http_access allow to_matching_mirrors
 
 # allow caching urls matching the repository structure
 cache allow to_matching_mirrors
+
+{% endif %}
+{% if squid_mirror_opendns %}
+# allow connections matching opendns rewrite requests
+http_access allow opendns_rewrite
 
 {% endif %}
 # allow access only to official archive mirrors
