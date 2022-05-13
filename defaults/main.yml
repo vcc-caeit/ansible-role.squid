@@ -1,5 +1,5 @@
 ---
-squid_hostname: "{{ ansible_hostname }}"
+squid_hostname: "{{ ansible_fqdn }}"
 
 squid_allowed_networks:
   # private networks
