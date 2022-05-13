@@ -109,11 +109,11 @@ acl to_match_mirrors urlpath_regex \/pool\/\w+\/(lib)?[a-z]\/.*\.(deb|udeb|tar\.
 # create ACLs for our cache peers to query us
 {%     for sibling in cache_peers | selectattr('type', 'eq', 'sibling') | map(attribute='host') | unique %}
 {%       set cache_types.siblings=True %}
-acl siblings src {{ sibling }}
+acl siblings src {{ lookup('community.general.dig', sibling) }}
 {%     endfor %}
 {%     for child in cache_peers | selectattr('type', 'eq', 'child') | map(attribute='host') | unique %}
 {%       set cache_types.children=True %}
-acl children src {{ child }}
+acl children src {{ lookup('community.general.dig', child) }}
 {%     endfor %}
 
 {%   endif %}
