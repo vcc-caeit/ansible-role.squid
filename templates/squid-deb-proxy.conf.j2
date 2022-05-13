@@ -230,22 +230,27 @@ refresh_pattern \/(Translation-.*)(|\.bz2|\.gz|\.xz)$ 0 0% 0 refresh-ims
 refresh_pattern changelogs.ubuntu.com\/.*  0  1% 1
 
 # only allow connects to ports for http, https
+acl SSL_ports port 443
 acl Safe_ports port 80
 acl Safe_ports port 443 563
+acl CONNECT method CONNECT
 
 # only allow ports we trust
 http_access deny !Safe_ports
 
-# allow access only to official archive mirrors
-# uncomment the third and fourth line to permit any unlisted domain
-http_access deny !to_archive_mirrors
-#http_access allow !to_archive_mirrors
+# deny CONNECT to other than secure SSL ports
+http_access deny CONNECT !SSL_ports
 
 {% if squid_mirror_match_all_repositories %}
 # allow access to urls matching the repository structure
 http_access deny !to_match_mirrors
 
 {% endif %}
+# allow access only to official archive mirrors
+# uncomment the third and fourth line to permit any unlisted domain
+http_access deny !to_archive_mirrors
+#http_access allow !to_archive_mirrors
+
 # don't cache domains not listed in the mirrors file
 # uncomment the third and fourth line to cache any unlisted domains
 cache deny !to_archive_mirrors
