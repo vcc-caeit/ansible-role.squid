@@ -158,10 +158,8 @@ http_access allow allowed_networks
 http_access deny all
 
 # Templated options, some with defaults
-{% for port in [squid_http_port] | flatten | unique %}
+{% for port in [squid_http_port | default(3128, True)] | flatten | unique %}
 http_port {{ port }}
-{% else %}
-http_port {{ squid_http_port | default(3128, True) }}
 {% endfor %}
 visible_hostname {{ squid_hostname }}
 {% if squid_max_object_size is defined %}
