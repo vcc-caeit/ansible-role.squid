@@ -93,6 +93,19 @@ By default this is not set, which will use whatever default your Squid installat
 
     squid_direct_connections: always never prefer fallback
 
+In some cases you need to do some external adaptions to what traffic gets served. Squid supports ICAP (Internet Content Adaptation Protocol) for this.
+You can define services per the example, although only `name` is required if you are happy with the defaults. `bypass` will not get set, unless defined, and will use the Squid default value.
+This role will not take care of setting up the ICAP service(s).
+
+    squid_icap_policy:
+      - name: service
+        direction: in
+        bypass: false
+        url: http://127.0.0.1:1344/service
+        access:
+          - acl: all
+            allow: true
+
 What port should we listen on. If we are a cache sibling, we will use the defined port instead of the `squid_http_port` variable for `squid_deb_proxy`.
 When `squid_deb_proxy` is not set, there is now support for having this variable be a list of Listen directives.
 

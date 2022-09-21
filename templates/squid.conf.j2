@@ -5,6 +5,15 @@
 acl allowed_networks src {{ network }}
 {% endfor %}
 
+{% if squid_icap_policy is defined and (squid_icap_policy | type_debug == "list") %}
+# use icap services to adapt content before serving, i.e. virus scan
+icap_enable on
+{%   for icap_service in squid_icap_policy %}
+{%   set direction = icap_service.direction | default('in') %}
+icap_service {{ icap_service.name | mandatory }}_{{ direction }} {{ 'req' if direction == 'out' else 'resp' }}mod_precache{% if icap_service.bypass is defined and icap_service.bypass is bool %} bypass={{ 'on' if icap_service.bypass else 'off' }}{% endif %} {{ icap_service.url if icap_service.url is defined else 'http://127.0.0.1:1344/' + icap_service.name }}
+{%   endfor %}
+
+{% endif %}
 {% set cache_peers = [] %}
 {% for parent_proxy in [squid_parent_proxies | default(None)] | flatten %}
 {%   if not parent_proxy.startswith('http') %}
@@ -154,6 +163,16 @@ http_access deny manager
 http_access deny to_localhost
 http_access allow allowed_networks
 
+{% if squid_icap_policy is defined and (squid_icap_policy | type_debug == "list") %}
+# allow access only after going through the icap services
+{%   for icap_service in squid_icap_policy %}
+{%   set direction = icap_service.direction | default('in') %}
+{%     for icap_access in icap_service.access | default([{'acl': 'all', 'allow': True}]) %}
+adaptation_access {{ icap_service.name | mandatory }}_{{ direction }} {{ 'allow' if icap_access.allow | default(True) else 'deny' }} {{ icap_access.acl }}
+{%     endfor %}
+{%   endfor %}
+
+{% endif %}
 # And finally deny all other access to this proxy
 http_access deny all
 
