@@ -202,7 +202,9 @@ icp_access deny all
 
 {% endif %}
 # set the port we should listen to for queries, default to stock squid
-http_port {{ squid_http_port | default(3128, True) }}
+{% for port in [squid_http_port | default(3128, True)] | flatten | unique %}
+http_port {{ port }}
+{% endfor %}
 
 # -------------------------------------------------
 # settings below probably do not need customization
