@@ -17,6 +17,14 @@
 acl allowed_networks src {{ network }}
 {% endfor %}
 
+{% if squid_bypass_parent is defined and squid_bypass_parent | type_debug == "list" %}
+# allow servers to bypass the parent proxy
+{%   for server in squid_bypass_parent %}
+acl bypass_servers dstdomain {{ server }}
+{%   endfor %}
+always_direct allow bypass_servers
+
+{% endif %}
 # list of mirrors we want to allow connections to
 {% if squid_mirror_debian and squid_mirror_default %}
 # the default mirror names on debian are ftp[0-9]*\.[a-z]+\.debian\.org
@@ -59,7 +67,7 @@ acl to_archive_mirrors dstdomain private-ppa.launchpad.net
 
 {% endif %}
 # list any custom mirrors you want to access below
-{% for mirror in squid_mirror_custom | default([]) %}
+{% for mirror in squid_mirror_custom | default([]) + squid_bypass_parent | default([]) %}
 acl to_archive_mirrors dstdomain {{ mirror }}
 {% endfor %}
 {% if squid_mirror_match_all_repositories %}

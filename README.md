@@ -93,6 +93,12 @@ By default this is not set, which will use whatever default your Squid installat
 
     squid_direct_connections: always never prefer fallback
 
+Sometimes you need to bypass the parent proxy for some servers. We now allow you to bypass parent caches by setting `squid_bypass_parent`, which is a list of hostnames.
+
+    squid_bypass_parent:
+      - server1.example.net
+      - server2.example.com
+
 In some cases you need to do some external adaptions to what traffic gets served. Squid supports ICAP (Internet Content Adaptation Protocol) for this.
 You can define services per the example, although only `name` is required if you are happy with the defaults. `bypass` will not get set, unless defined, and will use the Squid default value.
 This role will not take care of setting up the ICAP service(s).
