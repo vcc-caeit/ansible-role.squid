@@ -10,7 +10,7 @@ acl allowed_networks src {{ network }}
 icap_enable on
 {%   for icap_service in squid_icap_policy %}
 {%   set direction = icap_service.direction | default('in') %}
-icap_service {{ icap_service.name | mandatory }}_{{ direction }} {{ 'req' if direction == 'out' else 'resp' }}mod_precache{% if icap_service.bypass is defined and icap_service.bypass is bool %} bypass={{ 'on' if icap_service.bypass else 'off' }}{% endif %} {{ icap_service.url if icap_service.url is defined else 'http://127.0.0.1:1344/' + icap_service.name }}
+icap_service {{ icap_service.name | mandatory }}_{{ direction }} {{ 'req' if direction == 'out' else 'resp' }}mod_precache{% if icap_service.bypass is defined and icap_service.bypass is bool %} bypass={{ 'on' if icap_service.bypass else 'off' }}{% endif %} {{ icap_service.url if icap_service.url is defined else 'icap://127.0.0.1:1344/' + icap_service.name }}
 {%   endfor %}
 
 {% endif %}
