@@ -5,6 +5,14 @@
 acl allowed_networks src {{ network }}
 {% endfor %}
 
+{% if squid_bypass_parent is defined and squid_bypass_parent | type_debug == "list" %}
+# allow servers to bypass the parent proxy
+{%   for server in squid_bypass_parent %}
+acl bypass_servers dstdomain {{ server }}
+{%   endfor %}
+always_direct allow bypass_servers
+
+{% endif %}
 {% if squid_icap_policy is defined and (squid_icap_policy | type_debug == "list") %}
 # use icap services to adapt content before serving, i.e. virus scan
 icap_enable on
