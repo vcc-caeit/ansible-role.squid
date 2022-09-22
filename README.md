@@ -101,7 +101,7 @@ This role will not take care of setting up the ICAP service(s).
       - name: service
         direction: in
         bypass: false
-        url: http://127.0.0.1:1344/service
+        url: icap://127.0.0.1:1344/service
         access:
           - acl: all
             allow: true
