@@ -156,6 +156,9 @@ acl Safe_ports port 488		# gss-http
 acl Safe_ports port 591		# filemaker
 acl Safe_ports port 777		# multiling http
 acl CONNECT method CONNECT
+{% for acl in squid_acls | default([]) %}
+acl {{ acl }}
+{% endfor %}
 
 # Deny requests to certain unsafe ports
 http_access deny !Safe_ports
@@ -163,6 +166,13 @@ http_access deny !Safe_ports
 # Deny CONNECT to other than secure SSL ports
 http_access deny CONNECT !SSL_ports
 
+{% if squid_log_xff_acls is defined %}
+{%   for aclname in squid_log_xff_acls | default([]) %}
+follow_x_forwarded_for allow {{ aclname }}
+{%   endfor %}
+log_uses_indirect_client on
+
+{% endif %}
 # Only allow cachemgr access from localhost
 http_access allow localhost manager
 http_access deny manager
@@ -201,6 +211,10 @@ cache_dir {{ squid_cache_type | default('ufs') }} {{ squid_cache_path | default(
 {% endif %}
 {% if squid_cache_mem is defined or squid_max_object_mem_size is defined %}
 
+{% if squid_logformat is defined %}
+logformat {{ squid_logformat }}
+
+{% endif %}
 # Tweaks to speed things up
 cache_mem {{ squid_cache_mem | default("200 MB") }}
 maximum_object_size_in_memory {{ squid_max_object_mem_size | default("10240 KB") }}
