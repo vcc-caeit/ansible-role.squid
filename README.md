@@ -25,6 +25,19 @@ We default to IPv4 RFC1918, IPv6 link-local and localhost for both families.
       - fe80::/64
       - ::1
 
+List of access list entries you would like to add. We append the acl keyword in front automatically.
+Example: `['example srcdomain .example.com']`.
+
+    squid_acls: []
+
+List of matching access lists to follow and log X-Forwarded-For as host in the logs. This variable is only acted on if defined.
+
+    squid_log_xff_acls: []
+
+Set `squid_logformat` if you need to define the logformat squid uses.
+
+    squid_logformat: <fallback to default>
+
 Set this to true if you want a proxy optimised for handling Ubuntu mirrors rather than a regular proxy.
 
     squid_deb_proxy: false

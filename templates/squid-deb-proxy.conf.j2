@@ -262,6 +262,9 @@ acl SSL_ports port 443
 acl Safe_ports port 80
 acl Safe_ports port 443 563
 acl CONNECT method CONNECT
+{% for acl in squid_acls | default([]) %}
+acl {{ acl }}
+{% endfor %}
 
 # only allow ports we trust
 http_access deny !Safe_ports
@@ -269,6 +272,13 @@ http_access deny !Safe_ports
 # deny CONNECT to other than secure SSL ports
 http_access deny CONNECT !SSL_ports
 
+{% if squid_log_xff_acls is defined %}
+{%   for aclname in squid_log_xff_acls | default([]) %}
+follow_x_forwarded_for allow {{ aclname }}
+{%   endfor %}
+log_uses_indirect_client on
+
+{% endif %}
 {% if squid_mirror_match_all_repositories %}
 # allow access to defined archive mirrors
 http_access allow to_archive_mirrors
@@ -314,6 +324,10 @@ adaptation_access {{ icap_service.name | mandatory }}_{{ direction }} {{ 'allow'
 # And finally deny all other access to this proxy
 http_access deny all
 
+{% if squid_logformat is defined %}
+logformat {{ squid_logformat }}
+
+{% endif %}
 # we don't want to clash with the squid netdb state file
 #netdb_filename stdio:/var/log/squid-deb-proxy/netdb.state
 {% if squid_nameservers is defined %}
